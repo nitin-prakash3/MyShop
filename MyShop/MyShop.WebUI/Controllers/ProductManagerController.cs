@@ -7,6 +7,7 @@ using MyShop.Core.Models;
 using MyShop.DataAccess.InMemory;
 using MyShop.Core.ViewModels;
 using MyShop.Core.Contracts;
+using System.IO;
 
 namespace MyShop.WebUI.Controllers
 {
@@ -37,7 +38,7 @@ namespace MyShop.WebUI.Controllers
         }
 
         [HttpPost]
-        public ActionResult Create(Product product)
+        public ActionResult Create(Product product, HttpPostedFileBase file)
         {
             if (!ModelState.IsValid)
             {
@@ -45,6 +46,11 @@ namespace MyShop.WebUI.Controllers
             }
             else
             {
+                if(file != null)
+                {
+                    product.Image = product.Id + Path.GetExtension(file.FileName);
+                    file.SaveAs(Server.MapPath("//Content//ProductImages//") + product.Image);
+                }
                 context.Insert(product);
                 context.Commit();
                 return RedirectToAction("Index");
@@ -68,10 +74,10 @@ namespace MyShop.WebUI.Controllers
         }
 
         [HttpPost]
-        public ActionResult Edit(Product product, string Id)
+        public ActionResult Edit(Product product, string Id, HttpPostedFileBase file)
         {
-            Product ProductToEdit = context.Find(Id);
-            if (ProductToEdit == null)
+            Product productToEdit = context.Find(Id);
+            if (productToEdit == null)
             {
                 return HttpNotFound();
             }
@@ -81,11 +87,15 @@ namespace MyShop.WebUI.Controllers
                 {
                     return View(product);
                 }
-                ProductToEdit.Category = product.Category;
-                ProductToEdit.Description = product.Description;
-                ProductToEdit.Name = product.Name;
-                ProductToEdit.Image = product.Image;
-                ProductToEdit.Price = product.Price;
+                if (file != null)
+                {
+                    productToEdit.Image = Id + Path.GetExtension(file.FileName);
+                    file.SaveAs(Server.MapPath("//Content//ProductImages//") + productToEdit.Image);
+                }
+                productToEdit.Category = product.Category;
+                productToEdit.Description = product.Description;
+                productToEdit.Name = product.Name;
+                productToEdit.Price = product.Price;
 
                 context.Commit();
                 return RedirectToAction("Index");
